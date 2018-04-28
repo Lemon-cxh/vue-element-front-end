@@ -9,6 +9,9 @@
               <el-tree
                 :props="props"
                 :load="loadNode"
+                ref="tree"
+                node-key="id"
+                :expand-on-click-node="false"
                 lazy
                 @node-click="nodeClick">
               </el-tree>
@@ -104,10 +107,7 @@
                 <el-table-column label="权限状态" width="180" align="center">
                   <template slot-scope="scope">
                     <el-switch v-model="scope.row.status" active-color="#13ce66"
-                               inactive-color="#ff4949"
-                               active-value="100"
-                               inactive-value="0"
-                               style="margin: 1px">
+                               inactive-color="#ff4949" style="margin: 1px">
                     </el-switch>
                   </template>
                 </el-table-column>
@@ -141,66 +141,111 @@
           children: 'zones'
         },
         count: 1,
-        permissionForm: {
-          identify: '',
-          permissionName: '',
-          menuIcon: '',
-          parentIdentify: '',
-          menuPath: '',
-          menuOrder: '',
-          menuNote: ''
-
-        },
-        tableData: [{
-          id: 1,
-          identification: 'M',
-          status: 0,
-          note: '菜单可见权限'
-        }, {
-          id: 2,
-          identification: 'R',
-          status: 0,
-          note: '查询权限'
-        }, {
-          id: 3,
-          identification: 'C',
-          status: 100,
-          note: '新增权限'
-        }, {
-          id: 4,
-          identification: 'U',
-          status: 100,
-          note: '更新权限'
-        }, {
-            id: 4,
-          identification: 'D',
-          status: 100,
-            note: '删除权限'
-        }],
+        permissionForm: {},
+        tableData: [],
         treeData: [{
-          id: 'funds',
-          name: '资金管理',
-          parentId: '-1'
-        }, {
-            id: 'getmoney',
-            name: '提现记录',
-            parentId: 'funds'
-        }, {
-          id: 'root',
+          active: '',
+          childList: null,
+          icon: 'fa fa-bars',
+          id: 'base',
           name: '基础管理',
-          parentId: '-1'
+          optional: '[{"checked":true,"id":"M","text":"菜单可见"},{"checked":true,"id":"R","text":"查询"},{"checked":true,"id":"C","text":"新增"},{"checked":true,"id":"U","text":"修改"},{"checked":false,"id":"D","text":"删除"}]',
+          optionalMap: {
+            M: {
+              checked: true,
+              id: 'M',
+              text: '菜单可见'
+            },
+            R: {
+              checked: true,
+              id: 'R',
+              text: '查询'
+            },
+            C: {
+              checked: true,
+              id: 'C',
+              text: '新增'
+            },
+            U: {
+              checked: true,
+              id: 'U',
+              text: '修改'
+            },
+            D: {
+              checked: false,
+              id: 'D',
+              text: '删除'
+            }
+          },
+          parentId: '-1',
+          properties: null,
+          remark: '基础管理',
+          sortIndex: 0,
+          status: 1,
+          uri: ''
         }, {
-          id: 'info',
-          name: '提现详情',
-          parentId: 'getmoney'
+          active: '',
+          childList: null,
+          icon: 'fa fa-pie-chart',
+          id: 'area',
+          name: '区域管理',
+          optional: '[{"checked":true,"id":"M","text":"菜单可见"},{"checked":true,"id":"R","text":"查询"},{"checked":true,"id":"C","text":"新增"},{"checked":true,"id":"U","text":"修改"},{"checked":false,"id":"D","text":"删除"}]',
+          optionalMap: {
+            M: {
+              checked: true,
+              id: 'M',
+              text: '菜单可见'
+            },
+            R: {
+              checked: true,
+              id: 'R',
+              text: '查询'
+            },
+            C: {
+              checked: false,
+              id: 'C',
+              text: '新增'
+            },
+            U: {
+              checked: true,
+              id: 'U',
+              text: '修改'
+            },
+            D: {
+              checked: false,
+              id: 'D',
+              text: '删除'
+            }
+          },
+          parentId: 'base',
+          properties: null,
+          remark: '区域管理',
+          sortIndex: 2,
+          status: 1,
+          uri: 'admin/area/list.html'
         }]
       }
   },
     methods: {
       nodeClick(data, node, itself) {
-        console.info(data)
-        console.info(node)
-        console.info(itself)
+        this.permissionForm.identify = data.id
+        this.permissionForm.permissionName = data.name
+        this.permissionForm.menuIcon = this.treeData[data.index].icon
+        this.permissionForm.parentIdentify = this.treeData[data.index].parentId
+        this.permissionForm.menuPath = this.treeData[data.index].uri
+        this.permissionForm.menuOrder = this.treeData[data.index].sortIndex
+        this.permissionForm.menuNote = this.treeData[data.index].remark
+        const result = []
+        let j = 1
+        for (const i in this.treeData[data.index].optionalMap) {
+          const d = {}
+          d.id = j++
+          d.identification = this.treeData[data.index].optionalMap[i].id
+          d.status = this.treeData[data.index].optionalMap[i].checked
+          d.note = this.treeData[data.index].optionalMap[i].text
+          result.push(d)
+        }
+        this.tableData = result
       },
       loadNode: function(node, resolve) {
         if (node.level === 0) {
@@ -210,6 +255,7 @@
               const d = {}
               d.name = this.treeData[i].name
               d.id = this.treeData[i].id
+              d.index = i
               data.push(d)
             }
           }
@@ -222,6 +268,7 @@
               const d = {}
               d.name = this.treeData[i].name
               d.id = this.treeData[i].id
+              d.index = i
               data.push(d)
             }
           }
@@ -229,7 +276,7 @@
         }
       },
       handleDelete: function(index, row) {
-        console.log(index, row)
+        console.info(this.$refs.tree.getCurrentKey)
     }
     }
   }
